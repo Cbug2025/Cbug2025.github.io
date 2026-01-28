@@ -1420,7 +1420,7 @@ pre code {
     vertical-align: middle;
   }
   .links-of-author a::before {
-    background: #3eff18;
+    background: #40a8ff;
     display: inline-block;
     margin-right: 3px;
     transform: translateY(-2px);
@@ -3022,4 +3022,44 @@ body,
 /* 5. 去掉一些不必要的黑白分割线 */
 .post-eof {
   display: none;
+}
+/* === 🚑 菜单栏定点修复手术 === */
+/* 1. 选中左上角的菜单块 (.header-inner) */
+.header-inner {
+/* 背景改为：浅白色 + 半透明 */
+  background: rgba(255,255,255,0.85) !important;
+/* 加上磨砂玻璃效果 */
+  backdrop-filter: blur(10px);
+/* 加上极细的白边，增加精致感 */
+  border: 1px solid rgba(255,255,255,0.5);
+}
+/* 2. 把菜单里的文字强制改成黑色 */
+/* 网站标题 (Cbug2025) */
+.site-title {
+  color: #000 !important;
+  font-weight: bold;
+}
+/* 菜单项 (首页、日常学习...) */
+.menu-item a {
+  color: #333 !important; /* 深灰色 */
+  font-weight: 600; /* 稍微加粗 */
+}
+/* 图标颜色 */
+.menu-item i {
+  color: #333 !important;
+}
+/* 3. 鼠标悬停时的效果 */
+.menu-item a:hover,
+.menu-item-active a {
+  background: rgba(0,0,0,0.05) !important; /* 淡淡的灰色背景 */
+  color: #000 !important; /* 纯黑文字 */
+  border-radius: 5px;
+}
+/* 4. 修正左下角那个黑色块 (.sidebar-inner) 的文字 */
+/* 因为上面改了全局菜单颜色，这里要“保护”一下下面那个黑色块，让它的字保持白色 */
+.sidebar-inner .site-author-name,
+.sidebar-inner .site-description,
+.sidebar-inner .site-state-item-count,
+.sidebar-inner .site-state-item-name {
+  color: #eee !important;
 }
