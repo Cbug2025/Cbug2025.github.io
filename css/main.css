@@ -1420,7 +1420,7 @@ pre code {
     vertical-align: middle;
   }
   .links-of-author a::before {
-    background: #7190f4;
+    background: #53ffc4;
     display: inline-block;
     margin-right: 3px;
     transform: translateY(-2px);
@@ -3062,4 +3062,18 @@ body,
 .sidebar-inner .site-state-item-count,
 .sidebar-inner .site-state-item-name {
   color: #eee !important;
+}
+/* === 修复标题颜色：黑底白字 === */
+.site-brand-container {
+  background: #000 !important; /* 标题背景变黑 */
+  border-radius: 12px 12px 0 0; /* 上半部分圆角 */
+}
+.site-title {
+  color: #fff !important; /* 标题文字变白 */
+  text-shadow: none !important; /* 去掉阴影，保持极简 */
+}
+/* 修正：因为标题变黑了，菜单栏上方就不需要圆角了，稍微调整下 */
+.header-inner {
+  border-radius: 12px; /* 整体圆角保持 */
+  overflow: hidden; /* 确保黑色的标题块不会溢出 */
 }
