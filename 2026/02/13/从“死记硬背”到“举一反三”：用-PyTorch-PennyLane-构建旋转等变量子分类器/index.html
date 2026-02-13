@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="1. 摘要 (Abstract)在具身智能（Embodied AI）和机器人领域，识别不同姿态的物体通常需要海量的数据增强（Data Augmentation）。经典的卷积神经网络（CNN）往往像一个“死记硬背”的学生：看过正着的杯子，却认不出倒着的杯子。 本文展示了一个基于 PyTorch 和 PennyLane 构建的简易量子等变卷积神经网络 (Equivariant QCNN)。实验表明，仅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从“死记硬背”到“举一反三”：用 PyTorch + PennyLane 构建旋转等变量子分类器">
+<meta property="og:url" content="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/index.html">
+<meta property="og:site_name" content="Cbug2025">
+<meta property="og:description" content="1. 摘要 (Abstract)在具身智能（Embodied AI）和机器人领域，识别不同姿态的物体通常需要海量的数据增强（Data Augmentation）。经典的卷积神经网络（CNN）往往像一个“死记硬背”的学生：看过正着的杯子，却认不出倒着的杯子。 本文展示了一个基于 PyTorch 和 PennyLane 构建的简易量子等变卷积神经网络 (Equivariant QCNN)。实验表明，仅">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/data_samples.png">
+<meta property="og:image" content="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/architecture.png">
+<meta property="og:image" content="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/CNNresult.png">
+<meta property="og:image" content="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/best_model_result.png">
+<meta property="article:published_time" content="2026-02-13T10:20:00.000Z">
+<meta property="article:modified_time" content="2026-02-13T11:32:19.657Z">
+<meta property="article:author" content="Cbug">
+<meta property="article:tag" content="Embodied AI">
+<meta property="article:tag" content="Geometric Deep Learning">
+<meta property="article:tag" content="PennyLane">
+<meta property="article:tag" content="PyTorch">
+<meta property="article:tag" content="Quantum Machine Learning">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/data_samples.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/","path":"2026/02/13/从“死记硬背”到“举一反三”：用-PyTorch-PennyLane-构建旋转等变量子分类器/","title":"从“死记硬背”到“举一反三”：用 PyTorch + PennyLane 构建旋转等变量子分类器"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>从“死记硬背”到“举一反三”：用 PyTorch + PennyLane 构建旋转等变量子分类器 | Cbug2025</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+  <script class="next-config" data-name="mermaid" type="application/json">{"enable":true,"theme":{"light":"default","dark":"dark"},"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.1/mermaid.min.js","integrity":"sha256-BmQmdWDS8X2OTbrwELWK366LV6escyWhHHe0XCTU/Hk="}}</script>
+  <script src="/js/third-party/tags/mermaid.js" defer></script>
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Cbug2025</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-日常学习"><a href="/categories/study/" rel="section"><i class="fa fa-book fa-fw"></i>日常学习</a></li><li class="menu-item menu-item-杂谈"><a href="/categories/chat/" rel="section"><i class="fa fa-comment fa-fw"></i>杂谈</a></li><li class="menu-item menu-item-生活"><a href="/categories/life/" rel="section"><i class="fa fa-coffee fa-fw"></i>生活</a></li><li class="menu-item menu-item-运动"><a href="/categories/sport/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>运动</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E6%91%98%E8%A6%81-Abstract"><span class="nav-number">1.</span> <span class="nav-text">1. 摘要 (Abstract)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%BC%95%E8%A8%80%EF%BC%9A%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E7%9A%84%E2%80%9C%E9%98%BF%E5%96%80%E7%90%89%E6%96%AF%E4%B9%8B%E8%B8%B5%E2%80%9D"><span class="nav-number">2.</span> <span class="nav-text">2. 引言：具身智能的“阿喀琉斯之踵”</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%AE%9E%E9%AA%8C%E8%AE%BE%E8%AE%A1%EF%BC%9A%E4%B8%80%E5%9C%BA%E2%80%9C%E4%B8%8D%E5%85%AC%E5%B9%B3%E2%80%9D%E7%9A%84%E5%AF%B9%E5%86%B3"><span class="nav-number">3.</span> <span class="nav-text">3. 实验设计：一场“不公平”的对决</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E6%95%B0%E6%8D%AE%E9%9B%86%E9%80%89%E5%8F%96%EF%BC%9A%E6%8B%93%E6%89%91%E7%89%B9%E5%BE%81%E7%9A%84%E5%AF%B9%E6%8A%97"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 数据集选取：拓扑特征的对抗</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E5%AE%9E%E9%AA%8C%E8%A7%84%E5%88%99-The-Rules"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 实验规则 (The Rules)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%A8%A1%E5%9E%8B%E6%9E%B6%E6%9E%84%EF%BC%9A%E5%BD%93%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E9%81%87%E4%B8%8A%E9%87%8F%E5%AD%90%E6%8B%93%E6%89%91"><span class="nav-number">4.</span> <span class="nav-text">4. 模型架构：当神经网络遇上量子拓扑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 数据流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84%E5%9B%BE-Architecture-Visualization"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 核心架构图 (Architecture Visualization)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C%E5%B1%95%E7%A4%BA"><span class="nav-number">5.</span> <span class="nav-text">5. 实验结果展示</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E7%BB%8F%E5%85%B8-CNN%EF%BC%9A%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E7%9A%84%E2%80%9C%E6%B3%A2%E6%B5%AA%E7%BA%BF%E2%80%9D"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 经典 CNN：死记硬背的“波浪线”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E9%87%8F%E5%AD%90%E6%A8%A1%E5%9E%8B%EF%BC%9A%E7%A8%B3%E5%A6%82%E6%B3%B0%E5%B1%B1%E7%9A%84%E2%80%9C%E7%9B%B4%E7%BA%BF%E2%80%9D"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 量子模型：稳如泰山的“直线”</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E7%BB%93%E8%AE%BA%E4%B8%8E%E5%B1%95%E6%9C%9B%EF%BC%9AQuantum-Geometric-Head"><span class="nav-number">6.</span> <span class="nav-text">6. 结论与展望：Quantum Geometric Head</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E7%BB%93%E8%AE%BA"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 结论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-%E5%B1%95%E6%9C%9B%EF%BC%9A%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E7%9A%84%E2%80%9C%E9%87%8F%E5%AD%90%E5%B0%8F%E8%84%91%E2%80%9D"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 展望：具身智能的“量子小脑”</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE-References"><span class="nav-number">7.</span> <span class="nav-text">参考文献 (References)</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cbug</p>
+  <div class="site-description" itemprop="description">苦力虫的小站</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cbug">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cbug2025">
+      <meta itemprop="description" content="苦力虫的小站">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="从“死记硬背”到“举一反三”：用 PyTorch + PennyLane 构建旋转等变量子分类器 | Cbug2025">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从“死记硬背”到“举一反三”：用 PyTorch + PennyLane 构建旋转等变量子分类器
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-02-13 18:20:00 / 修改时间：19:32:19" itemprop="dateCreated datePublished" datetime="2026-02-13T18:20:00+08:00">2026-02-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/study/" itemprop="url" rel="index"><span itemprop="name">日常学习</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="1-摘要-Abstract"><a href="#1-摘要-Abstract" class="headerlink" title="1. 摘要 (Abstract)"></a>1. 摘要 (Abstract)</h2><p>在具身智能（Embodied AI）和机器人领域，识别不同姿态的物体通常需要海量的数据增强（Data Augmentation）。经典的卷积神经网络（CNN）往往像一个“死记硬背”的学生：看过正着的杯子，却认不出倒着的杯子。</p>
+<p>本文展示了一个基于 <strong>PyTorch</strong> 和 <strong>PennyLane</strong> 构建的简易<strong>量子等变卷积神经网络 (Equivariant QCNN)</strong>。实验表明，仅使用 30 个参数的量子模型，在只训练 0° 图片的情况下，实现了对 360° 全角度的<strong>零样本泛化 (Zero-shot Generalization)</strong>，完胜同等条件下参数量为其 100 倍的经典 CNN。这为解决具身智能中的样本效率问题提供了一种基于“物理几何先验”的新思路。</p>
+<h2 id="2-引言：具身智能的“阿喀琉斯之踵”"><a href="#2-引言：具身智能的“阿喀琉斯之踵”" class="headerlink" title="2. 引言：具身智能的“阿喀琉斯之踵”"></a>2. 引言：具身智能的“阿喀琉斯之踵”</h2><p>我们在训练机器人时常面临一个尴尬：为了让它认出一个倒下的水杯，我们可能需要喂给它成千上万张不同角度的水杯照片。</p>
+<ul>
+<li><strong>经典深度学习的逻辑</strong>是“大力出奇迹”：只要我见过的数据够多，我就能覆盖所有情况。</li>
+<li><strong>现实世界的逻辑</strong>是：数据是昂贵的，机器人的算力和电量是有限的。</li>
+</ul>
+<p>这就引出了一个核心问题：<strong>有没有一种模型，不需要通过“背题”来学习旋转，而是天生就“懂”旋转？</strong></p>
+<p>量子计算天然的酉群（Unitary Group）结构和希尔伯特空间的几何特性，为我们提供了一种可能的解法：<strong>量子几何深度学习 (Quantum Geometric Deep Learning)</strong>。通过在量子线路中硬编码拓扑结构，我们可以赋予模型“旋转等变性” (Rotation Equivariance)。</p>
+<h2 id="3-实验设计：一场“不公平”的对决"><a href="#3-实验设计：一场“不公平”的对决" class="headerlink" title="3. 实验设计：一场“不公平”的对决"></a>3. 实验设计：一场“不公平”的对决</h2><p>为了验证这一假设，我设计了一个具有挑战性的对比实验。</p>
+<h3 id="3-1-数据集选取：拓扑特征的对抗"><a href="#3-1-数据集选取：拓扑特征的对抗" class="headerlink" title="3.1 数据集选取：拓扑特征的对抗"></a>3.1 数据集选取：拓扑特征的对抗</h3><p>我们选取了 <strong>MNIST &#x2F; Scikit-learn Digits</strong> 数据集中的 <strong>数字 0</strong> 和 <strong>数字 1</strong>。</p>
+<ul>
+<li><strong>数字 0</strong>：拓扑上是一个闭环（空心）。</li>
+<li><strong>数字 1</strong>：拓扑上是一条线（实心）。</li>
+<li><strong>理由</strong>：这两个数字在几何拓扑上差异巨大，非常适合验证模型是否真的学到了“形状”而非仅仅记住了“像素位置”。</li>
+</ul>
+<img src="/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/data_samples.png" class="" title="数据集可视化：0° 训练集 vs 旋转测试集">
+
+<h3 id="3-2-实验规则-The-Rules"><a href="#3-2-实验规则-The-Rules" class="headerlink" title="3.2 实验规则 (The Rules)"></a>3.2 实验规则 (The Rules)</h3><ul>
+<li><strong>训练集 (The Trap)</strong>：两个模型都<strong>只能看到 0° (正向)</strong> 的图片（包含少量平移噪声）。</li>
+<li><strong>测试集 (The Test)</strong>：两个模型必须识别从 0° 到 360° 任意旋转的图片。</li>
+<li><strong>选手介绍</strong>：<ul>
+<li>🔴 <strong>量子选手 (Ours)</strong>：基于 PennyLane 的等变 QCNN，参数量仅 <strong>30个</strong>。</li>
+<li>⚫ <strong>经典选手 (Baseline)</strong>：标准的 PyTorch CNN，参数量约 <strong>3000个</strong>。</li>
+</ul>
+</li>
+</ul>
+<h2 id="4-模型架构：当神经网络遇上量子拓扑"><a href="#4-模型架构：当神经网络遇上量子拓扑" class="headerlink" title="4. 模型架构：当神经网络遇上量子拓扑"></a>4. 模型架构：当神经网络遇上量子拓扑</h2><p>我们的量子模型并不是暴力堆砌量子门，而是采用了符合物理对称性的 <strong>4x4 网格拓扑结构</strong>。</p>
+<h3 id="4-1-数据流"><a href="#4-1-数据流" class="headerlink" title="4.1 数据流"></a>4.1 数据流</h3><ol>
+<li><strong>输入</strong>：8x8 原始图像。</li>
+<li><strong>经典下采样</strong>：通过 Average Pooling 压缩至 4x4 ，既保留了主要特征，又适配当前量子模拟器的算力。</li>
+<li><strong>量子编码</strong>：使用 <strong>Angle Embedding</strong>，将 16 个像素值映射为 16 个量子比特的旋转角度。</li>
+</ol>
+<h3 id="4-2-核心架构图-Architecture-Visualization"><a href="#4-2-核心架构图-Architecture-Visualization" class="headerlink" title="4.2 核心架构图 (Architecture Visualization)"></a>4.2 核心架构图 (Architecture Visualization)</h3><p>为了实现旋转不变性，我们将 4x4 的量子比特阵列划分为 <strong>“内圈”</strong> 和 <strong>“外圈”</strong>，并强制同一圈层的量子比特共享参数。</p>
+<img src="/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/architecture.png" class="" title="3D 等变量子 CNN 架构图">
+
+<p><em>图：数据流从 8x8 图像开始，经过池化进入量子层。红色表示受限的内圈参数，蓝色表示外圈参数。</em></p>
+<h2 id="5-实验结果展示"><a href="#5-实验结果展示" class="headerlink" title="5. 实验结果展示"></a>5. 实验结果展示</h2><h3 id="5-1-经典-CNN：死记硬背的“波浪线”"><a href="#5-1-经典-CNN：死记硬背的“波浪线”" class="headerlink" title="5.1 经典 CNN：死记硬背的“波浪线”"></a>5.1 经典 CNN：死记硬背的“波浪线”</h3><p>经典 CNN 拥有约 3000 个参数，虽然在 0° 处表现近乎完美，但由于其结构缺乏对旋转变换的先验理解，准确率随角度呈现出剧烈的“W”型震荡。</p>
+<ul>
+<li><strong>现象</strong>：当图像旋转至 90°、180° 或 270° 等未见角度时，准确率会大幅下降至 50%-60% 左右，处于“瞎猜”边缘。</li>
+<li><strong>本质</strong>：经典 CNN 在此实验中表现为单纯的像素模式匹配，而非几何特征理解。</li>
+</ul>
+<img src="/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/CNNresult.png" class="" title="图 1：经典 CNN 随角度变化的 Accuracy 曲线">
+
+<h3 id="5-2-量子模型：稳如泰山的“直线”"><a href="#5-2-量子模型：稳如泰山的“直线”" class="headerlink" title="5.2 量子模型：稳如泰山的“直线”"></a>5.2 量子模型：稳如泰山的“直线”</h3><p>相比之下，我们的量子等变模型（仅 20-30 个参数）在全角度范围内展现了近乎平齐的高准确率曲线。</p>
+<ul>
+<li><strong>现象</strong>：即便只投喂了 0° 的训练数据，模型在全量程旋转测试下依然能保持极高的分类一致性。</li>
+<li><strong>本质</strong>：这证明了量子电路通过拓扑对称性（Equivariance）实现了真正的 <strong>Zero-shot 泛化</strong>。</li>
+</ul>
+<img src="/2026/02/13/%E4%BB%8E%E2%80%9C%E6%AD%BB%E8%AE%B0%E7%A1%AC%E8%83%8C%E2%80%9D%E5%88%B0%E2%80%9C%E4%B8%BE%E4%B8%80%E5%8F%8D%E4%B8%89%E2%80%9D%EF%BC%9A%E7%94%A8-PyTorch-PennyLane-%E6%9E%84%E5%BB%BA%E6%97%8B%E8%BD%AC%E7%AD%89%E5%8F%98%E9%87%8F%E5%AD%90%E5%88%86%E7%B1%BB%E5%99%A8/best_model_result.png" class="" title="图 2：量子模型实现 Zero-shot 泛化的预测表现">
+
+<hr>
+<h2 id="6-结论与展望：Quantum-Geometric-Head"><a href="#6-结论与展望：Quantum-Geometric-Head" class="headerlink" title="6. 结论与展望：Quantum Geometric Head"></a>6. 结论与展望：Quantum Geometric Head</h2><h3 id="6-1-结论"><a href="#6-1-结论" class="headerlink" title="6.1 结论"></a>6.1 结论</h3><p>诚然本分类器实验并不严谨，同时算力受限难以展示QCNN优越性。但实验直观展现了，通过将“人类智慧”（拓扑先验）注入量子电路，模型可以从底层物理逻辑上理解几何变换。</p>
+<ul>
+<li><strong>参数效率</strong>：量子模型以极小的参数规模实现了远超经典网络的泛化能力。</li>
+<li><strong>降维打击</strong>：这种基于结构而非数据驱动的优化，是解决小样本学习问题的关键。</li>
+</ul>
+<h3 id="6-2-展望：具身智能的“量子小脑”"><a href="#6-2-展望：具身智能的“量子小脑”" class="headerlink" title="6.2 展望：具身智能的“量子小脑”"></a>6.2 展望：具身智能的“量子小脑”</h3><p>未来的具身智能或许将采用 <strong>“大模型大脑 + 量子几何小脑”</strong> 的架构：</p>
+<ul>
+<li><strong>大脑 (GPU&#x2F;NPU)</strong>：负责高层逻辑、语言理解与复杂的任务规划。</li>
+<li><strong>小脑 (Quantum Geometric Head)</strong>：利用量子电路对连续群（如 SO(2)、SO(3)）的天然处理能力，负责具有物理对称性的运动控制与感知，以极低功耗实现对未知姿态的精准响应。</li>
+</ul>
+<hr>
+<h2 id="参考文献-References"><a href="#参考文献-References" class="headerlink" title="参考文献 (References)"></a>参考文献 (References)</h2><p>[1] <strong>Cong, I., Choi, S. &amp; Lukin, M.D.</strong> “Quantum convolutional neural networks.” <em>Nature Physics</em> 15, 1273–1278 (2019). (QCNN 的奠基之作)<br>[2] <strong>Mitarai, K., et al.</strong> “Quantum machine intelligence.” <em>Quantum Machine Intelligence</em> 2(1). (2020). (参考架构图来源之一)<br>[3] <strong>Cohen, T. S., &amp; Welling, M.</strong> “Group equivariant convolutional networks.” <em>International Conference on Machine Learning (ICML)</em>. (2016). (经典几何深度学习的开创性工作)<br>[4] <strong>Science China Physics, Mechanics &amp; Astronomy</strong> 64(9). (2021). (关于 NISQ 设备友好型架构的研究参考)<br>[5] <strong>PennyLane Documentation.</strong> “Geometric Quantum Machine Learning.” [Online]. Available: <a target="_blank" rel="noopener" href="https://pennylane.ai/">https://pennylane.ai/</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Quantum-Machine-Learning/" rel="tag"># Quantum Machine Learning</a>
+              <a href="/tags/PyTorch/" rel="tag"># PyTorch</a>
+              <a href="/tags/PennyLane/" rel="tag"># PennyLane</a>
+              <a href="/tags/Geometric-Deep-Learning/" rel="tag"># Geometric Deep Learning</a>
+              <a href="/tags/Embodied-AI/" rel="tag"># Embodied AI</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/01/26/%E6%B5%8B%E8%AF%95%E5%88%86%E7%B1%BB%E5%8A%9F%E8%83%BD/" rel="prev" title="测试分类功能">
+                  <i class="fa fa-angle-left"></i> 测试分类功能
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Cbug</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
