@@ -200,9 +200,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-02-13 18:20:00 / 修改时间：19:35:50" itemprop="dateCreated datePublished" datetime="2026-02-13T18:20:00+08:00">2026-02-13</time>
+      <time title="创建时间：2026-02-13 18:20:00" itemprop="dateCreated datePublished" datetime="2026-02-13T18:20:00+08:00">2026-02-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-14 13:03:37" itemprop="dateModified" datetime="2026-02-14T13:03:37+08:00">2026-02-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -224,7 +230,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h2 id="1-摘要-Abstract"><a href="#1-摘要-Abstract" class="headerlink" title="1. 摘要 (Abstract)"></a>1. 摘要 (Abstract)</h2><p>在具身智能（Embodied AI）和机器人领域，识别不同姿态的物体通常需要海量的数据增强（Data Augmentation）。经典的卷积神经网络（CNN）往往像一个“死记硬背”的学生：看过正着的杯子，却认不出倒着的杯子。</p>
+          <h5 id="code-available-on-https-github-com-Cbug2025-rotation-invariant-qcnn-demo"><a href="#code-available-on-https-github-com-Cbug2025-rotation-invariant-qcnn-demo" class="headerlink" title="code available on https://github.com/Cbug2025/rotation-invariant-qcnn-demo"></a>code available on <a target="_blank" rel="noopener" href="https://github.com/Cbug2025/rotation-invariant-qcnn-demo">https://github.com/Cbug2025/rotation-invariant-qcnn-demo</a></h5><h2 id="1-摘要-Abstract"><a href="#1-摘要-Abstract" class="headerlink" title="1. 摘要 (Abstract)"></a>1. 摘要 (Abstract)</h2><p>在具身智能（Embodied AI）和机器人领域，识别不同姿态的物体通常需要海量的数据增强（Data Augmentation）。经典的卷积神经网络（CNN）往往像一个“死记硬背”的学生：看过正着的杯子，却认不出倒着的杯子。</p>
 <p>本文展示了一个基于 <strong>PyTorch</strong> 和 <strong>PennyLane</strong> 构建的简易<strong>量子等变卷积神经网络 (Equivariant QCNN)</strong>。实验表明，仅使用 30 个参数的量子模型，在只训练 0° 图片的情况下，实现了对 360° 全角度的<strong>零样本泛化 (Zero-shot Generalization)</strong>，完胜同等条件下参数量为其 100 倍的经典 CNN。这为解决具身智能中的样本效率问题提供了一种基于“物理几何先验”的新思路。</p>
 <h2 id="2-引言：具身智能的“阿喀琉斯之踵”"><a href="#2-引言：具身智能的“阿喀琉斯之踵”" class="headerlink" title="2. 引言：具身智能的“阿喀琉斯之踵”"></a>2. 引言：具身智能的“阿喀琉斯之踵”</h2><p>我们在训练机器人时常面临一个尴尬：为了让它认出一个倒下的水杯，我们可能需要喂给它成千上万张不同角度的水杯照片。</p>
 <ul>
